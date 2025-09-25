@@ -27,14 +27,16 @@ test('addMenuItem - unauthorized', async () => {
     expect(addRes.body.message).toBe('unable to add menu item');
 })
 
-// test('addMenuItem - authorized', async () => {
-//     const adminToken = await testUtils.loginAdminUser(app);
-//     const newItem = { description: 'Test Item', price: 9.99 };
-//     const addRes = await request(app).put('/api/order/menu').send(newItem).set('Authorization', `Bearer ${adminToken}`);
-//     expect(addRes.status).toBe(200);
-//     expect(Array.isArray(addRes.body)).toBe(true);
-//     expect(addRes.body.find(i => i.description === newItem.description && i.price === newItem.price)).toBeDefined();
-// })
+test('addMenuItem - authorized', async () => {
+    const adminUser = await testUtils.createAdminUser();
+    const adminToken = await testUtils.loginAdminUser(app, adminUser);
+    const newItem = { title: 'Test Item', image: 'test.png', price: 9.99, description: 'Test Item' };
+    const addRes = await request(app).put('/api/order/menu').send(newItem).set('Authorization', `Bearer ${adminToken}`);
+    expect(addRes.status).toBe(200);
+    expect(Array.isArray(addRes.body)).toBe(true);
+    expect(addRes.body.find(i => i.description === newItem.description && i.price === newItem.price
+        && i.title === newItem.title)).toBeDefined();
+})
 
 test('createOrder', async () => {
     const loginToken = await testUtils.loginUser(app, testUser);
