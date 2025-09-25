@@ -1,6 +1,7 @@
 const request = require('supertest');
 const app = require('../service');
 const testUtils = require('./testUtils');
+const {orderReq} = require("./testUtils");
 
 const testUser = { name: 'pizza diner', email: 'reg@test.com', password: 'a' };
 let testUserAuthToken;
@@ -18,6 +19,38 @@ test('getMenu', async () => {
     expect(Array.isArray(menuRes.body)).toBe(true);
     expect(menuRes.body.length).toBeGreaterThan(0);
 });
+
+test('addMenuItem - unauthorized', async () => {
+    const newItem = { description: 'Test Item', price: 9.99 };
+    const addRes = await request(app).put('/api/order/menu').send(newItem).set('Authorization', `Bearer ${testUserAuthToken}`);
+    expect(addRes.status).toBe(403);
+    expect(addRes.body.message).toBe('unable to add menu item');
+})
+
+// test('addMenuItem - authorized', async () => {
+//     const adminToken = await testUtils.loginAdminUser(app);
+//     const newItem = { description: 'Test Item', price: 9.99 };
+//     const addRes = await request(app).put('/api/order/menu').send(newItem).set('Authorization', `Bearer ${adminToken}`);
+//     expect(addRes.status).toBe(200);
+//     expect(Array.isArray(addRes.body)).toBe(true);
+//     expect(addRes.body.find(i => i.description === newItem.description && i.price === newItem.price)).toBeDefined();
+// })
+
+test('createOrder', async () => {
+    const loginToken = await testUtils.loginUser(app, testUser);
+    const orderRes = await request(app).post('/api/order').send(testUtils.orderReq).set('Authorization', `Bearer ${loginToken}`);
+    expect(orderRes.status).toBe(200);
+    expect(orderRes.body.order).toMatchObject(orderReq);
+    expect(orderRes.body.order.id).toBeDefined();
+    expect(orderRes.body.jwt).toBeDefined();
+})
+
+test('getOrders', async () => {
+    const loginToken = await testUtils.loginUser(app, testUser);
+    await request(app).post('/api/order').send(testUtils.orderReq).set('Authorization', `Bearer ${loginToken}`);
+    const ordersRes = await request(app).get('/api/order').set('Authorization', `Bearer ${loginToken}`);
+    expect(ordersRes.status).toBe(200);
+})
 
 afterAll(async () => {
     const logOut = await request(app).delete('/api/auth').set('Authorization', `Bearer ${testUserAuthToken}`);
