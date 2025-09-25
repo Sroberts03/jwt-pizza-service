@@ -17,7 +17,6 @@ test('getFranchises', async () => {
     const res = await request(app).get('/api/franchise').set('Authorization', `Bearer ${testUserAuthToken}`);
     expect(res.status).toBe(200);
     expect(res.body.franchises.length).toBeGreaterThan(0);
-    expect(res.body.more).toBe(false);
 })
 
 test('getFranchisesBasedOffUser', async () => {

@@ -15,7 +15,7 @@ async function loginUser(app, testUser) {
 async function createAdminUser() {
     let user = { password: 'toomanysecrets', roles: [{ role: Role.Admin }] };
     user.name = adminUser.name + Math.random().toString(36).substring(2, 12);
-    user.email = user.name + '@admin.com';
+    user.email = user.name + '@test.com';
 
     await DB.addUser(user);
     user.password = 'toomanysecrets';
@@ -26,7 +26,7 @@ async function createAdminUser() {
 async function createFranchiseeUser() {
     let user = { password: 'toomanyFranchise', roles: [{ role: Role.Franchisee, objectId: 1}] };
     user.name = franchiseeUser.name + Math.random().toString(36).substring(2, 12);
-    user.email = user.name + '@franchisee.com';
+    user.email = user.name + '@test.com';
 
     await DB.addUser(user);
     user.password = 'toomanyFranchise';
@@ -37,7 +37,7 @@ async function createFranchiseeUser() {
 async function createTestFranchise(app) {
     const adminUser = await createAdminUser();
     const adminToken = await loginUser(app, adminUser);
-    const testFranchiseName = Math.random().toString(36).substring(2, 12) + 'franchise';
+    const testFranchiseName = Math.random().toString(36).substring(2, 12) + 'Test_franchise';
     const createFranchiseRes = await request(app).post('/api/franchise').send({ name: testFranchiseName, admins: [{ email: adminUser.email }] }).set('Authorization', `Bearer ${adminToken}`);
     expect(createFranchiseRes.status).toBe(200);
     expect(createFranchiseRes.body.name).toBe(testFranchiseName);
