@@ -28,7 +28,7 @@ test('addMenuItem - unauthorized', async () => {
 
 test('addMenuItem - authorized', async () => {
     const adminUser = await testUtils.createAdminUser();
-    const adminToken = await testUtils.loginAdminUser(app, adminUser);
+    const adminToken = await testUtils.loginUser(app, adminUser);
     const newItem = { title: 'Test Item', image: 'test.png', price: 9.99, description: 'Test Item' };
     const addRes = await request(app).put('/api/order/menu').send(newItem).set('Authorization', `Bearer ${adminToken}`);
     expect(addRes.status).toBe(200);

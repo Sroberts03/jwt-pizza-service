@@ -19,6 +19,21 @@ test('getFranchises', async () => {
     expect(res.body.more).toBe(false);
 })
 
+test('getFranchisesBasedOffUser', async () => {
+    //create a test franchise
+    await testUtils.createTestFranchise(app);
+})
+
+test('createAndDeleteFranchise', async () => {
+    const fIdAToken = await testUtils.createTestFranchise(app);
+    const franchiseId = fIdAToken[0];
+    const adminToken = fIdAToken[1];
+
+    const deleteFranchiseRes = await request(app).delete(`/api/franchise/${franchiseId}`).set('Authorization', `Bearer ${adminToken}`);
+    expect(deleteFranchiseRes.status).toBe(200);
+    expect(deleteFranchiseRes.body.message).toBe('franchise deleted');
+})
+
 afterAll(async () => {
     const logOut = await request(app).delete('/api/auth').set('Authorization', `Bearer ${testUserAuthToken}`);
     expect(logOut.status).toBe(200);
