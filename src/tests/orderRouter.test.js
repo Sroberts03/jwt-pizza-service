@@ -12,7 +12,16 @@ beforeAll(async () => {
     testUtils.expectValidJwt(testUserAuthToken);
 });
 
-test('getMenu', async () => {
+test('addItemAndGetMenu', async () => {
+    const adminUser = await testUtils.createAdminUser();
+    const adminToken = await testUtils.loginUser(app, adminUser);
+    const newItem = { title: 'Test Item', image: 'test.png', price: 9.99, description: 'Test Item' };
+    const addRes = await request(app).put('/api/order/menu').send(newItem).set('Authorization', `Bearer ${adminToken}`);
+    expect(addRes.status).toBe(200);
+    expect(Array.isArray(addRes.body)).toBe(true);
+    expect(addRes.body.find(i => i.description === newItem.description && i.price === newItem.price
+        && i.title === newItem.title)).toBeDefined();
+
     const menuRes = await request(app).get('/api/order/menu');
     expect(menuRes.status).toBe(200);
     expect(Array.isArray(menuRes.body)).toBe(true);
@@ -24,17 +33,6 @@ test('addMenuItem - unauthorized', async () => {
     const addRes = await request(app).put('/api/order/menu').send(newItem).set('Authorization', `Bearer ${testUserAuthToken}`);
     expect(addRes.status).toBe(403);
     expect(addRes.body.message).toBe('unable to add menu item');
-})
-
-test('addMenuItem - authorized', async () => {
-    const adminUser = await testUtils.createAdminUser();
-    const adminToken = await testUtils.loginUser(app, adminUser);
-    const newItem = { title: 'Test Item', image: 'test.png', price: 9.99, description: 'Test Item' };
-    const addRes = await request(app).put('/api/order/menu').send(newItem).set('Authorization', `Bearer ${adminToken}`);
-    expect(addRes.status).toBe(200);
-    expect(Array.isArray(addRes.body)).toBe(true);
-    expect(addRes.body.find(i => i.description === newItem.description && i.price === newItem.price
-        && i.title === newItem.title)).toBeDefined();
 })
 
 test('createOrder', async () => {
