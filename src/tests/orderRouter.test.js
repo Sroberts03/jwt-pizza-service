@@ -41,7 +41,7 @@ test('createOrder', async () => {
     const loginToken = await testUtils.loginUser(app, testUser);
     const orderRes = await request(app).post('/api/order').send(testUtils.orderReq).set('Authorization', `Bearer ${loginToken}`);
     expect(orderRes.status).toBe(200);
-    expect(orderRes.body.order).toMatchObject(orderReq);
+    expect(orderRes.body.order).toMatchObject(testUtils.orderReq);
     expect(orderRes.body.order.id).toBeDefined();
     expect(orderRes.body.jwt).toBeDefined();
 })
