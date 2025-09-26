@@ -360,21 +360,6 @@ class DB {
     const [rows] = await connection.execute(`SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?`, [config.db.connection.database]);
     return rows.length > 0;
   }
-
-  //clean application data created during tests
-  async clean() {
-      const connection = await this.getConnection();
-        try {
-            await connection.query('DELETE from menu where image = ?', ['test.png']);
-            await connection.query('DELETE from franchise where name like ?', ['%Test_franchise']);
-            await connection.query('DELETE from userRole where userId in (select id from user where email like ?)', ['%@test.com']);
-            await connection.query('DELETE from orderItem where orderId in (select id from dinerOrder where dinerId in (select id from user where email like ?))', ['%@test.com']);
-            await connection.query('DELETE from dinerOrder where dinerId in (select id from user where email like ?)', ['%@test.com']);
-            await connection.query('DELETE from user where email like ?', ['%@test.com']);
-        } finally {
-            connection.end();
-        }
-    }
 }
 
 const db = new DB();
