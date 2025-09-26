@@ -35,4 +35,5 @@ afterAll(async () => {
     const logOut = await request(app).delete('/api/auth').set('Authorization', `Bearer ${testUserAuthToken}`);
     expect(logOut.status).toBe(200);
     expect(logOut.body.message).toBe('logout successful');
+    await testUtils.cleanApp();
 })

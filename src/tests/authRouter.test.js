@@ -29,3 +29,7 @@ test('loginAndLogout', async () => {
     expect(logOut.status).toBe(200);
     expect(logOut.body.message).toBe('logout successful');
 });
+
+afterAll(async () => {
+    await testUtils.cleanApp();
+})

@@ -1,9 +1,7 @@
 const request = require("supertest");
 const { DB, Role } = require('../database/database.js');
 
-const adminUser = { name: 'admin user', email: '', password: 'adminpass' };
 const orderReq = { franchiseId: 1, storeId: 1, items: [{ menuId: 1, description: 'Veggie', price: 0.05 }] };
-const franchiseeUser = { name: 'franchisee user', email: '', password: 'franchisepass' };
 
 async function loginUser(app, testUser) {
     const loginRes = await request(app).put('/api/auth').send(testUser);
@@ -14,22 +12,11 @@ async function loginUser(app, testUser) {
 
 async function createAdminUser() {
     let user = { password: 'toomanysecrets', roles: [{ role: Role.Admin }] };
-    user.name = adminUser.name + Math.random().toString(36).substring(2, 12);
+    user.name = Math.random().toString(36).substring(2, 12);
     user.email = user.name + '@test.com';
 
     await DB.addUser(user);
     user.password = 'toomanysecrets';
-
-    return user;
-}
-
-async function createFranchiseeUser() {
-    let user = { password: 'toomanyFranchise', roles: [{ role: Role.Franchisee, objectId: 1}] };
-    user.name = franchiseeUser.name + Math.random().toString(36).substring(2, 12);
-    user.email = user.name + '@test.com';
-
-    await DB.addUser(user);
-    user.password = 'toomanyFranchise';
 
     return user;
 }
@@ -48,4 +35,8 @@ function expectValidJwt(potentialJwt) {
     expect(potentialJwt).toMatch(/^[a-zA-Z0-9\-_]*\.[a-zA-Z0-9\-_]*\.[a-zA-Z0-9\-_]*$/);
 }
 
-module.exports = { loginUser, expectValidJwt, createAdminUser, createFranchiseeUser, createTestFranchise, orderReq };
+function cleanApp() {
+    return DB.clean();
+}
+
+module.exports = { loginUser, expectValidJwt, createAdminUser, createTestFranchise, orderReq, cleanApp };
