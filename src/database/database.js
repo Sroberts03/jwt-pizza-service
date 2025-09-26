@@ -361,6 +361,7 @@ class DB {
     return rows.length > 0;
   }
 
+  //clean application data created during tests
   async clean() {
       const connection = await this.getConnection();
         try {
