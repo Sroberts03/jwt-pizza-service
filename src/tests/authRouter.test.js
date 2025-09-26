@@ -10,20 +10,22 @@ beforeAll(async () => {
     const registerRes = await request(app).post('/api/auth').send(testUser);
     testUserAuthToken = registerRes.body.token;
     testUtils.expectValidJwt(testUserAuthToken);
+    const logOut = await request(app).delete('/api/auth').set('Authorization', `Bearer ${testUserAuthToken}`);
+    expect(logOut.status).toBe(200);
+    expect(logOut.body.message).toBe('logout successful');
 });
 
-test('login', async () => {
+test('loginAndLogout', async () => {
     const loginRes = await request(app).put('/api/auth').send(testUser);
     expect(loginRes.status).toBe(200);
     testUtils.expectValidJwt(loginRes.body.token);
+    testUserAuthToken = loginRes.body.token;
 
     const expectedUser = { ...testUser, roles: [{ role: 'diner' }] };
     delete expectedUser.password;
     expect(loginRes.body.user).toMatchObject(expectedUser);
-});
 
-afterAll(async () => {
     const logOut = await request(app).delete('/api/auth').set('Authorization', `Bearer ${testUserAuthToken}`);
     expect(logOut.status).toBe(200);
     expect(logOut.body.message).toBe('logout successful');
-})
+});

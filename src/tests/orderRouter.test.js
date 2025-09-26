@@ -26,6 +26,7 @@ test('addItemAndGetMenu', async () => {
     expect(menuRes.status).toBe(200);
     expect(Array.isArray(menuRes.body)).toBe(true);
     expect(menuRes.body.length).toBeGreaterThan(0);
+    await request(app).delete('/api/auth').set('Authorization', `Bearer ${adminToken}`);
 });
 
 test('addMenuItem - unauthorized', async () => {
@@ -36,8 +37,7 @@ test('addMenuItem - unauthorized', async () => {
 })
 
 test('createOrder', async () => {
-    const loginToken = await testUtils.loginUser(app, testUser);
-    const orderRes = await request(app).post('/api/order').send(testUtils.orderReq).set('Authorization', `Bearer ${loginToken}`);
+    const orderRes = await request(app).post('/api/order').send(testUtils.orderReq).set('Authorization', `Bearer ${testUserAuthToken}`);
     expect(orderRes.status).toBe(200);
     expect(orderRes.body.order).toMatchObject(testUtils.orderReq);
     expect(orderRes.body.order.id).toBeDefined();
@@ -45,9 +45,8 @@ test('createOrder', async () => {
 })
 
 test('getOrders', async () => {
-    const loginToken = await testUtils.loginUser(app, testUser);
-    await request(app).post('/api/order').send(testUtils.orderReq).set('Authorization', `Bearer ${loginToken}`);
-    const ordersRes = await request(app).get('/api/order').set('Authorization', `Bearer ${loginToken}`);
+    await request(app).post('/api/order').send(testUtils.orderReq).set('Authorization', `Bearer ${testUserAuthToken}`);
+    const ordersRes = await request(app).get('/api/order').set('Authorization', `Bearer ${testUserAuthToken}`);
     expect(ordersRes.status).toBe(200);
 })
 
