@@ -35,8 +35,8 @@ function expectValidJwt(potentialJwt) {
     expect(potentialJwt).toMatch(/^[a-zA-Z0-9\-_]*\.[a-zA-Z0-9\-_]*\.[a-zA-Z0-9\-_]*$/);
 }
 
-function cleanApp() {
-    return DB.clean();
+async function cleanApp() {
+    await DB.clean();
 }
 
 module.exports = { loginUser, expectValidJwt, createAdminUser, createTestFranchise, orderReq, cleanApp };
