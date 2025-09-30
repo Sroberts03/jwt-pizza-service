@@ -5,5 +5,8 @@
     "global": {
       "lines": 80
     }
-  }
+  },
+  "globalSetup": "./globalSetup.js",
+  "globalTeardown": "./globalTeardown.js",
+  "testEnvironment": "node"
 }
