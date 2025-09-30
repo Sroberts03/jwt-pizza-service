@@ -11,4 +11,3 @@ module.exports = async () => {
   await connection.query('DROP DATABASE IF EXISTS pizza_test');
   connection.end();
 };
-

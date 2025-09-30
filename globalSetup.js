@@ -14,5 +14,4 @@ module.exports = async () => {
   // await connection.query('CREATE TABLE ...');
   // Or import your schema from a file
   connection.end();
-};
-
+}
