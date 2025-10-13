@@ -43,7 +43,9 @@ test('list users authorized', async () => {
     const listTestUser = {name : 'list user', email: Math.random().toString(36).substring(2, 12) + '@test.com', password: 'a'};
     const listUser = await request(app).post('/api/auth').send(listTestUser);
     await request(app).delete('/api/auth').set('Authorization', `Bearer ${listUser.body.token}`);
-    const listUsersRes = await request(app).get('/api/user').set('Authorization', `Bearer ${testUserAuthToken}`);
+    const adminUser = await testUtils.createAdminUser();
+    const adminToken = await testUtils.loginUser(app, adminUser);
+    const listUsersRes = await request(app).get('/api/user').set('Authorization', `Bearer ${adminToken}`);
     expect(listUsersRes.status).toBe(200);
     expect(listUsersRes.body).toMatchObject({
         users: expect.arrayContaining([{
@@ -53,6 +55,7 @@ test('list users authorized', async () => {
                 roles: expect.any(Array)
             }])
     });
+    await request(app).delete('/api/auth').set('Authorization', `Bearer ${adminToken}`);
  });
 
 afterAll(async () => {
