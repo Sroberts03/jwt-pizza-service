@@ -58,6 +58,34 @@ test('list users authorized', async () => {
     await request(app).delete('/api/auth').set('Authorization', `Bearer ${adminToken}`);
  });
 
+test('delete user unauthorized', async () => {
+  const deleteUserRes = await request(app).delete('/api/user/400').send();
+  expect(deleteUserRes.status).toBe(401);
+});
+
+test('delete user authorized', async () => {
+    const deleteTestUser = {name : 'delete user', email: Math.random().toString(36).substring(2, 12) + '@test.com', password: 'a'};
+    const delUserRes = await request(app).post('/api/auth').send(deleteTestUser);
+    const meRes = await request(app).get('/api/user/me').set('Authorization', `Bearer ${delUserRes.body.token}`);
+    const delUserId = meRes.body.id;
+
+    const adminUser = await testUtils.createAdminUser();
+    const adminToken = await testUtils.loginUser(app, adminUser);
+
+    const deleteUserRes = await request(app).delete(`/api/user/${delUserId}`).set('Authorization', `Bearer ${adminToken}`);
+    expect(deleteUserRes.status).toBe(200);
+    expect(deleteUserRes.body.message).toBe('user deleted');
+    const listUsersRes = await request(app).get('/api/user').set('Authorization', `Bearer ${adminToken}`);
+    expect(listUsersRes.body.users).not.toEqual(
+        expect.arrayContaining([
+            expect.objectContaining({ email: deleteTestUser.email })
+        ])
+    );
+
+    await request(app).delete('/api/auth').set('Authorization', `Bearer ${adminToken}`);
+    await request(app).delete('/api/auth').set('Authorization', `Bearer ${delUserRes.body.token}`);
+ });
+
 afterAll(async () => {
     const logOut = await request(app).delete('/api/auth').set('Authorization', `Bearer ${testUserAuthToken}`);
     expect(logOut.status).toBe(200);
