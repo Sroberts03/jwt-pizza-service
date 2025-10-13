@@ -75,6 +75,26 @@ class DB {
     }
   }
 
+  async listUsers(page = 1, limit = 10, nameFilter = '*') {
+    const connection = await this.getConnection();
+
+    const offset = (page - 1) * limit;
+    nameFilter = nameFilter.replace(/\*/g, '%');
+    
+    try {
+      const users = await this.query(connection, `SELECT id, name, email FROM user WHERE name LIKE ? LIMIT ${limit} OFFSET ${offset}`, [nameFilter]);
+      for (const user of users) {
+        const roleResult = await this.query(connection, `SELECT * FROM userRole WHERE userId=?`, [user.id]);
+        user.roles = roleResult.map((r) => {
+          return { role: r.role };
+        });
+      }
+      return users;
+    } finally {
+      connection.end();
+    }
+  }
+
   async updateUser(userId, name, email, password) {
     const connection = await this.getConnection();
     try {

@@ -51,4 +51,14 @@ userRouter.put(
   })
 );
 
+// listUsers
+userRouter.get(
+  '/',
+  authRouter.authenticateToken,
+  asyncHandler(async (req, res) => {
+    const users = await DB.listUsers(req.query.page, req.query.limit, req.query.name);
+    res.json({ users: users });
+  })
+);
+
 module.exports = userRouter;
