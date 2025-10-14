@@ -82,14 +82,19 @@ class DB {
     nameFilter = nameFilter.replace(/\*/g, '%');
     
     try {
-      const users = await this.query(connection, `SELECT id, name, email FROM user WHERE name LIKE ? LIMIT ${limit} OFFSET ${offset}`, [nameFilter]);
+      let users = await this.query(connection, `SELECT id, name, email FROM user WHERE name LIKE ? LIMIT ${limit} OFFSET ${offset}`, [nameFilter]);
       for (const user of users) {
         const roleResult = await this.query(connection, `SELECT * FROM userRole WHERE userId=?`, [user.id]);
         user.roles = roleResult.map((r) => {
           return { role: r.role };
         });
       }
-      return users;
+      const more = users.length + 1 > limit;
+      if (more) {
+        users = users.slice(0, limit);
+      }
+
+      return [users, more];
     } finally {
       connection.end();
     }

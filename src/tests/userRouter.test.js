@@ -39,7 +39,7 @@ test('list users unauthorized', async () => {
   expect(listUsersRes.status).toBe(401);
 });
 
-test('list users authorized', async () => {
+test('list users authorized more false', async () => {
     const listTestUser = {name : 'list user', email: Math.random().toString(36).substring(2, 12) + '@test.com', password: 'a'};
     const listUser = await request(app).post('/api/auth').send(listTestUser);
     await request(app).delete('/api/auth').set('Authorization', `Bearer ${listUser.body.token}`);
@@ -53,10 +53,34 @@ test('list users authorized', async () => {
                 name: listTestUser.name,
                 email: expect.any(String),
                 roles: expect.any(Array)
-            }])
+            }]), 
+            more: false
     });
     await request(app).delete('/api/auth').set('Authorization', `Bearer ${adminToken}`);
  });
+
+ test('list users with more as true', async () => {
+    for (let i = 0; i < 15; i++) {
+        const listTestUser = {name : 'list user', email: Math.random().toString(36).substring(2, 12) + '@test.com', password: 'a'};
+        const listUser = await request(app).post('/api/auth').send(listTestUser);
+        await request(app).delete('/api/auth').set('Authorization', `Bearer ${listUser.body.token}`);
+    }
+    const adminUser = await testUtils.createAdminUser();
+    const adminToken = await testUtils.loginUser(app, adminUser);
+    const listUsersRes = await request(app).get('/api/user').set('Authorization', `Bearer ${adminToken}`);
+    expect(listUsersRes.status).toBe(200);
+    expect(listUsersRes.body).toMatchObject({
+        users: expect.arrayContaining([{
+                id: expect.any(Number),
+                name: expect.any(String),
+                email: expect.any(String),
+                roles: expect.any(Array)
+            }]), 
+            more: true
+    });
+    await request(app).delete('/api/auth').set('Authorization', `Bearer ${adminToken}`);
+});
+ 
 
 test('delete user unauthorized', async () => {
   const deleteUserRes = await request(app).delete('/api/user/400').send();
