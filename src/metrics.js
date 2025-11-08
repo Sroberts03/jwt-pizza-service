@@ -19,6 +19,21 @@ const os = require('os');
         delete: 0,
     };
 
+    const pizzaCreationLatencyMetrics = {
+        totalLatencyMs: 0,
+        requestCount: 0,
+    };
+    
+    const latencyMetrics = {
+        totalLatencyMs: 0,
+        requestCount: 0,
+    };
+    
+    function trackPizzaCreationLatency(latencyMs) {
+        pizzaCreationLatencyMetrics.totalLatencyMs += latencyMs;
+        pizzaCreationLatencyMetrics.requestCount++;
+    }
+
     const metricsStartTime = Date.now() * 1e6;
 
     const userMetrics = {
@@ -78,6 +93,14 @@ const os = require('os');
         if (httpMetrics[method] !== undefined) {
             httpMetrics[method]++;
         }
+
+        const start = process.hrtime.bigint();
+        res.on('finish', () => {
+            const end = process.hrtime.bigint();
+            const latencyMs = Number(end - start) / 1e6;
+            latencyMetrics.totalLatencyMs += latencyMs;
+            latencyMetrics.requestCount++;
+        });
         next();
     }
 
@@ -95,18 +118,18 @@ const os = require('os');
             const metrics = new OtelMetricBuilder();
             const now = Date.now() * 1e6;
 
-            const httpReqDataPoints= Object.keys(httpMetrics).map(method => 
-                createDataPoint('asInt', httpMetrics[method], metricsStartTime, now, 
+            const httpReqDataPoints = Object.keys(httpMetrics).map(method =>
+                createDataPoint('asInt', httpMetrics[method], metricsStartTime, now,
                     [{ key: "method", value: { stringValue: method.toUpperCase() } }]));
             const httpMetric = createHttpMetric('HttpRequest_count_total', '1', 'sum', httpReqDataPoints);
 
             const userDataPoint = createDataPoint('asInt', userMetrics.activeUsers, metricsStartTime, now);
             const userMetric = createHttpMetric('ActiveUsers_gauge', '1', 'gauge', [userDataPoint]);
-            
+
             const loginAttemtptDataPoints = [
-                createDataPoint('asInt', userMetrics.successfulLogins, metricsStartTime, now, 
+                createDataPoint('asInt', userMetrics.successfulLogins, metricsStartTime, now,
                     [{ key: "outcome", value: { stringValue: "successful" } }]),
-                createDataPoint('asInt', userMetrics.failedLogins, metricsStartTime, now, 
+                createDataPoint('asInt', userMetrics.failedLogins, metricsStartTime, now,
                     [{ key: "outcome", value: { stringValue: "failed" } }])
             ];
             const loginMetric = createHttpMetric('LoginAttempts_count_total', '1', 'sum', loginAttemtptDataPoints);
@@ -120,14 +143,28 @@ const os = require('os');
             const systemMemoryMetric = createHttpMetric('SystemMemoryUsage_percent', 'percent', 'gauge', [memoryDataPoint]);
 
             const purchaseDataPoints = [
-                createDataPoint('asInt', purchaseMetrics.totalPurchases, metricsStartTime, now, 
+                createDataPoint('asInt', purchaseMetrics.totalPurchases, metricsStartTime, now,
                     [{ key: "outcome", value: { stringValue: "successful" } }]),
-                createDataPoint('asInt', purchaseMetrics.failedPurchases, metricsStartTime, now, 
+                createDataPoint('asInt', purchaseMetrics.failedPurchases, metricsStartTime, now,
                     [{ key: "outcome", value: { stringValue: "failed" } }]),
-                createDataPoint('asDouble', purchaseMetrics.totalRevenue, metricsStartTime, now, 
+                createDataPoint('asDouble', purchaseMetrics.totalRevenue, metricsStartTime, now,
                     [{ key: "metric", value: { stringValue: "revenue" } }])
             ];
             const purchaseMetric = createHttpMetric('PizzaPurchases_count_total', '1', 'sum', purchaseDataPoints);
+
+            let avgPizzaLatency = 0;
+            if (pizzaCreationLatencyMetrics.requestCount > 0) {
+                avgPizzaLatency = pizzaCreationLatencyMetrics.totalLatencyMs / pizzaCreationLatencyMetrics.requestCount;
+            }
+            const pizzaLatencyDataPoint = createDataPoint('asDouble', avgPizzaLatency, metricsStartTime, now);
+            const pizzaLatencyMetric = createHttpMetric('PizzaCreation_latency_avg_ms', 'ms', 'gauge', [pizzaLatencyDataPoint]);
+
+            let avgHttpLatency = 0;
+            if (latencyMetrics.requestCount > 0) {
+                avgHttpLatency = latencyMetrics.totalLatencyMs / latencyMetrics.requestCount;
+            }
+            const httpLatencyDataPoint = createDataPoint('asDouble', avgHttpLatency, metricsStartTime, now);
+            const httpLatencyMetric = createHttpMetric('HttpRequest_latency_avg_ms', 'ms', 'gauge', [httpLatencyDataPoint]);
 
             metrics.add(httpMetric);
             metrics.add(systemCpuMetric);
@@ -135,14 +172,16 @@ const os = require('os');
             metrics.add(userMetric);
             metrics.add(loginMetric);
             metrics.add(purchaseMetric);
+            metrics.add(pizzaLatencyMetric);
+            metrics.add(httpLatencyMetric);
 
-          if (metrics.metrics && metrics.metrics.length > 0) {
-            sendMetricToGrafana(metrics.metrics);
-          }
+            if (metrics.metrics && metrics.metrics.length > 0) {
+                sendMetricToGrafana(metrics.metrics);
+            }
         } catch (error) {
-          console.log('Error sending metrics', error);
+            console.log('Error sending metrics', error);
         }
-      }, 10000);
+    }, 10000);
     
     function createDataPoint(valueType, value, startTime, time, attributes = []) {
         return {
@@ -211,4 +250,5 @@ const os = require('os');
         httpRequestTracker,
         activeUsersTracker,
         pizzaPurchaseTracker,
+        trackPizzaCreationLatency,
     };

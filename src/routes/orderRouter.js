@@ -78,6 +78,7 @@ orderRouter.post(
   '/',
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
+    const start = process.hrtime.bigint();
     const orderReq = req.body;
     const order = await DB.addDinerOrder(req.user, orderReq);
     const r = await fetch(`${config.factory.url}/api/order`, {
@@ -86,6 +87,9 @@ orderRouter.post(
       body: JSON.stringify({ diner: { id: req.user.id, name: req.user.name, email: req.user.email }, order }),
     });
     const j = await r.json();
+    const end = process.hrtime.bigint();
+    const latencyMs = Number(end - start) / 1e6;
+    metrics.trackPizzaCreationLatency(latencyMs);
     if (r.ok) {
       res.send({ order, followLinkToEndChaos: j.reportUrl, jwt: j.jwt });
       metrics.pizzaPurchaseTracker(true, j.latencyMs, order.items.reduce((sum, item) => sum + item.price, 0));
