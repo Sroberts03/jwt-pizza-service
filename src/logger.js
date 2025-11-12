@@ -39,6 +39,17 @@ class Logger {
     this.log(level, 'factory', logData);
   };
 
+  errorLogger = (error, req) => {
+    const logData = {
+      message: error.message,
+      stack: error.stack,
+      path: req.originalUrl,
+      method: req.method,
+    };
+    const level = 'error';
+    this.log(level, 'error', logData);
+  };
+
   log(level, type, logData) {
     const labels = { component: config.logs.source, level: level, type: type };
     const values = [this.nowString(), this.sanitize(logData)];
