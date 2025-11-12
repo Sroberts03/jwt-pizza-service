@@ -20,6 +20,25 @@ class Logger {
     next();
   };
 
+  dataBaseLogger = (query) => {
+    const logData = {
+      query: query,
+    };
+    const level = 'info';
+    this.log(level, 'database', logData);
+  };
+
+  factoryLogger = (reqBody, res) => {
+    const body = JSON.stringify(reqBody);
+    const resBody = JSON.stringify(res.body);
+    const logData = {
+        facReq: body,
+        facRes: resBody,
+    };
+    const level = this.statusToLogLevel(res.statusCode);
+    this.log(level, 'factory', logData);
+  };
+
   log(level, type, logData) {
     const labels = { component: config.logs.source, level: level, type: type };
     const values = [this.nowString(), this.sanitize(logData)];
@@ -45,7 +64,6 @@ class Logger {
   }
 
   sendLogToGrafana(event) {
-    console.log('Sending log to Grafana');
     const body = JSON.stringify(event);
     fetch(`${config.logs.url}`, {
       method: 'post',
@@ -56,7 +74,6 @@ class Logger {
       },
     }).then((res) => {
       if (!res.ok) console.log('Failed to send log to Grafana', res.statusText);
-      else console.log('Log sent to Grafana successfully');
     });
   }
 }
