@@ -9,4 +9,6 @@
   "globalSetup": "./globalSetup.js",
   "globalTeardown": "./globalTeardown.js",
   "testEnvironment": "node"
+  ,
+  "testPathIgnorePatterns": ["<rootDir>/loadTests/"]
 }

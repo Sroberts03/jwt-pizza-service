@@ -1,0 +1,2 @@
+# Ignore load test scripts (k6) which use ESM and vendor imports
+loadTests/
