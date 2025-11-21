@@ -11,6 +11,7 @@ export default [
                 ...globals.jest,
             },
         },
+        ignores: ['loadTests/**'],
     },
     pluginJs.configs.recommended,
 ];
