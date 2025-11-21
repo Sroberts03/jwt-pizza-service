@@ -1,4 +1,4 @@
-import { sleep, check, group, fail } from 'k6'
+import { sleep, check, fail } from 'k6'
 import http from 'k6/http'
 import jsonpath from 'https://jslib.k6.io/jsonpath/1.0.2/index.js'
 
@@ -35,15 +35,6 @@ export const options = {
   },
 }
 
-// Scenario: Scenario_1 (executor: ramping-vus)
-
-export function scenario_1() {
-  let response
-
-  // Automatically added sleep
-  sleep(1)
-}
-
 // Scenario: Imported_HAR (executor: ramping-vus)
 
 export function imported_HAR() {
@@ -72,8 +63,7 @@ export function imported_HAR() {
     }
   )
   if (!check(response, { 'status equals 200': response => response.status.toString() === '200' })) {
-    console.log(response.body);
-    fail('Login was *not* 200');
+    fail('Login was *not* 200: ' + response.body);
   }
 
   vars['token'] = jsonpath.query(response.json(), '$.token')[0]
